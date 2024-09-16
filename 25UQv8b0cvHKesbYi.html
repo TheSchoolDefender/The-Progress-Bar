@@ -1,0 +1,165 @@
+<html><head><base href="https://smooth-liquid-loader.com/"><style>
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+.loader-container {
+    width: 300px;
+    text-align: center;
+    transition: transform 1s ease-in-out;
+}
+
+.loader {
+    width: 100%;
+    height: 30px;
+    background-color: rgba(224, 224, 224, 0.7);
+    border: 2px solid #ccc;
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loader-liquid {
+    width: 0%;
+    height: 100%;
+    background-color: #4CAF50;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    border-radius: 13px;
+    transition: width 0.1s linear;
+}
+
+.loader-percentage {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+.instructions {
+    position: absolute;
+    bottom: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+}
+
+.water-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    background-color: #4CAF50;
+    transition: height 0.5s ease-in-out;
+}
+</style></head><body>
+<div class="loader-container" id="loaderContainer">
+    <div class="loader">
+        <div class="loader-liquid" id="loaderLiquid"></div>
+    </div>
+    <div class="loader-percentage" id="loaderPercentage">0%</div>
+</div>
+
+<div class="water-container" id="waterContainer"></div>
+
+<div class="instructions">
+    Watch as the liquid fills up, drains by tilting to the left, and accumulates at the bottom!
+</div>
+
+<script>
+let progress = 0;
+let isTilting = false;
+let waterLevel = 0;
+const loaderContainer = document.getElementById('loaderContainer');
+const loaderLiquid = document.getElementById('loaderLiquid');
+const loaderPercentage = document.getElementById('loaderPercentage');
+const waterContainer = document.getElementById('waterContainer');
+
+function updateLoader() {
+    if (progress < 99 && !isTilting) {
+        progress += 1;
+        if (progress > 99) progress = 99;
+        
+        loaderLiquid.style.width = progress + '%';
+        loaderPercentage.textContent = Math.round(progress) + '%';
+        
+        if (progress >= 99) {
+            setTimeout(tiltAndDrain, 1000);
+        } else {
+            setTimeout(updateLoader, 100); // Adjust this value to change the speed (100ms = 0.1s)
+        }
+    }
+}
+
+function tiltAndDrain() {
+    isTilting = true;
+    let angle = 0;
+    let drainProgress = progress;
+
+    function tilt() {
+        if (angle > -90) {
+            angle -= 1;
+            loaderContainer.style.transform = `rotate(${angle}deg)`;
+            
+            if (angle < -20) {
+                drainProgress -= 1;
+                if (drainProgress < 0) drainProgress = 0;
+                
+                loaderLiquid.style.width = drainProgress + '%';
+                loaderLiquid.style.borderRadius = '13px 0 0 13px';
+                loaderPercentage.textContent = Math.round(drainProgress) + '%';
+                
+                increaseWaterLevel();
+            }
+            
+            requestAnimationFrame(tilt);
+        } else {
+            setTimeout(resetLoader, 500);
+        }
+    }
+
+    tilt();
+}
+
+function increaseWaterLevel() {
+    waterLevel += 0.3;
+    waterContainer.style.height = `${waterLevel}px`;
+    
+    if (waterLevel >= 100) {
+        drainWater();
+    }
+}
+
+function drainWater() {
+    const drainInterval = setInterval(() => {
+        waterLevel -= 1;
+        waterContainer.style.height = `${waterLevel}px`;
+        
+        if (waterLevel <= 0) {
+            clearInterval(drainInterval);
+            waterLevel = 0;
+        }
+    }, 50);
+}
+
+function resetLoader() {
+    loaderContainer.style.transform = 'rotate(0deg)';
+    loaderLiquid.style.borderRadius = '13px';
+    progress = 0;
+    loaderLiquid.style.width = '0%';
+    loaderPercentage.textContent = '0%';
+    isTilting = false;
+    setTimeout(updateLoader, 1000);
+}
+
+updateLoader();
+</script>
+</body></html>
